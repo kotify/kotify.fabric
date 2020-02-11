@@ -1,0 +1,28 @@
+---
+git:
+  url: git@github.com:kotify/kotify.fabric.git
+  branch: master
+server:
+  user: fabric
+  home_dir: /srv/fabric
+  project_name: kotify.fabric
+  project_dir: /srv/fabric/fabric
+  virtualenv_dir: /srv/fabric/env
+  django_dir: /srv/fabric/fabric/backend
+  django_settings_module: fabric.settings.prod
+aws:
+  instance_id: "i-0aaaaaaaaa"
+  region: "us-east-1"
+  availability_zone: "us-east-1a"
+  bucket: "fabric-bucket"
+  secrets: 'prod/fabric/env'
+  cdn_domain: "ddddddddd.cloudfront.net"
+supervisor:
+  celery_worker: false
+  celery_beat: false
+docker:
+  minimal:
+    - db
+    - redis
+    - worker
+user: ubuntu

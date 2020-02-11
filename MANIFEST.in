@@ -1,0 +1,8 @@
+global-exclude *.py[cod]
+prune __pycache__
+prune requirements.txt
+prune .pre-commit-config.yaml
+include LICENSE
+include README.md
+recursive-include src *.py
+prune example
