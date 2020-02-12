@@ -82,7 +82,7 @@ class GitController(BaseController):
         if (self.project_dir / ".git").exists():
             return True
         if self.project_dir.exists():
-            raise invoke.exceptions.Failure(
+            raise invoke.exceptions.Exit(
                 "Project directory exists but it's not a git repo."
             )
         return False
@@ -94,7 +94,7 @@ class GitController(BaseController):
                 s for s in result.stdout.split("\n") if s.startswith("Fetch URL: ")
             )[11:]
         except StopIteration:
-            raise invoke.exceptions.Failure(
+            raise invoke.exceptions.Exit(
                 f"`git remote show origin -n` returns invalid response:\n{result.stdout}"
             )
         if url != self.url:
@@ -145,13 +145,30 @@ class BaseDeploy:
             f"{self._cmd_prefix} && {cmd}", msg=msg, user=self.context.server.user
         )
 
-    def put(self, src, dst):
+    def put(self, src, dst, msg=None):
         tmp_name = f"{tempfile.gettempdir()}/{self.gen_random_string(8)}"
         user = self.context.server.user
         self.context.put(src, tmp_name)
-        self.sudo(
-            f"mv {tmp_name} {dst} && chown {user}:{user} {dst}",
-            msg="update webpack-stats.json",
+        self.sudo(f"mv {tmp_name} {dst} && chown {user}:{user} {dst}", msg=msg)
+
+    def rsync(self, src, dst, msg=None):
+        user = self.context.server.user
+        if msg:
+            print("*" * 80)
+            print(TermColors.OKGREEN + msg + TermColors.ENDC)
+            print("\n")
+        local(
+            f'rsync \
+                --archive \
+                --compress \
+                --delay-updates \
+                --delete-after \
+                --owner \
+                --group \
+                --chown={user}:{user} \
+                --rsync-path="sudo rsync" \
+                {src} {self.context.host}:{dst} \
+            '
         )
 
     @classmethod

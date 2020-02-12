@@ -27,9 +27,9 @@ def addkey(c):
 
 @task(name="dump")
 def database_dump(c):
-    dump_path = pathlib.Path(c.get("database", {}).get("dump_path", "dump.db"))
+    local_dump = pathlib.Path(c.get("database", {}).get("local_dump", "dump.db"))
     local(f"mssh {mssh_args(c)} -- 'sudo -u {c.server.user} -i -- app-db-dump'")
-    local(f"msftp {mssh_args(c)}:{c.server.home_dir}/{dump_path.name} {dump_path}")
+    local(f"msftp {mssh_args(c)}:{c.server.home_dir}/{local_dump.name} {local_dump}")
 
 
 ns = Collection("ssh")

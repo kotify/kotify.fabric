@@ -20,6 +20,9 @@ aws:
 supervisor:
   celery_worker: false
   celery_beat: false
+database:
+  local_dump: './dump.db'   # path where to store database dump (relative to project root)
+  post_restore_script: './path/to/script.sql'  # relative to project root
 docker:
   minimal:
     - db

@@ -6,19 +6,29 @@ from ._core import Collection, local, task
 @task(name="restore")
 def pg_restore(c):
     code_path = pathlib.Path(c.get("docker", {}).get("workdir", "/code"))
-    dump_path = c.get("database", {}).get("dump_path", "dump.db")
+    local_dump = c.get("database", {}).get("local_dump", "dump.db")
     local(
-        f'docker-compose exec -u postgres db \
-        bash -c "pg_restore \
-            --dbname=\\$DATABASE_URL \
-            --schema=public \
-            --no-privileges \
-            --no-owner \
-            --clean \
-            --if-exists \
-            {code_path / dump_path}"',
+        f'docker-compose exec -u postgres db bash -c "\
+            pg_restore \
+                --dbname=\\$DATABASE_URL \
+                --schema=public \
+                --no-privileges \
+                --no-owner \
+                --clean \
+                --if-exists \
+                {code_path / local_dump} \
+        "',
         pty=True,
     )
+    post_restore_script = c.get("database", {}).get("post_restore_script")
+    if post_restore_script:
+        local(
+            f'docker-compose exec -u postgres db bash -c "\
+                psql \
+                    --dbname=\\$$DATABASE_URL \
+                    -f {code_path / post_restore_script} \
+            "'
+        )
 
 
 @task(name="minimal")
