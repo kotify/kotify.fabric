@@ -213,21 +213,25 @@ class YarnController(BaseController):
 class CloudflareCdnController(BaseController):
     def __init__(self, deploy, bucket, cdn_domain, release=True):
         super().__init__(deploy)
-        self._month = datetime.datetime.now().strftime("%Y%m")
         self.cdn_domain = cdn_domain
         self.bucket = bucket
         if release:
-            cdn_path = f"/build/{self._month}/"
+            cdn_suffix = datetime.datetime.now().strftime("%Y%m")
+            cdn_path = f"/build/{cdn_suffix}/"
         else:
             git_rev = local("git rev-parse --short HEAD", hide="out").stdout.strip()
             cdn_path = f"/build/ci/{git_rev}/"
         self.public_path = f"https://{self.cdn_domain}{cdn_path}"
         self.s3_path = f"s3://{self.bucket}{cdn_path}"
 
-    def upload(self, path):
-        local(
-            f"aws s3 sync {path} {self.s3_path} --cache-control max-age=31536000 --acl public-read"
-        )
+    def upload(self, path, write_upload_script=False):
+        cmd = f"aws s3 sync {path} {self.s3_path} --cache-control max-age=31536000 --acl public-read"
+        if write_upload_script:
+            with open(pathlib.Path(path) / "upload.sh", "w") as f:
+                f.write(cmd)
+            local("chmod +x upload.sh")
+        else:
+            local(cmd)
 
 
 class FrontendDeploy(BaseDeploy):
