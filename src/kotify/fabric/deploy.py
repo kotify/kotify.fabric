@@ -229,7 +229,7 @@ class CloudflareCdnController(BaseController):
         if write_upload_script:
             with open(pathlib.Path(path) / "upload.sh", "w") as f:
                 f.write(cmd)
-            local("chmod +x upload.sh")
+            local(f"chmod +x {pathlib.Path(path) / 'upload.sh'}")
         else:
             local(cmd)
 
