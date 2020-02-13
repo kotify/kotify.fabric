@@ -167,7 +167,7 @@ class BaseDeploy:
                 --group \
                 --chown={user}:{user} \
                 --rsync-path="sudo rsync" \
-                {src} {self.context.host}:{dst} \
+                {src} {self.context.user}@{self.context.host}:{dst} \
             '
         )
 
