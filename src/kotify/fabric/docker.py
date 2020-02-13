@@ -1,12 +1,13 @@
 import pathlib
 
+from ._config import Config
 from ._core import Collection, local, task
 
 
 @task(name="restore")
 def pg_restore(c):
     code_path = pathlib.Path(c.get("docker", {}).get("workdir", "/code"))
-    local_dump = c.get("database", {}).get("local_dump", "dump.db")
+    config = Config(c)
     local(
         f'docker-compose exec -u postgres db bash -c "\
             pg_restore \
@@ -16,7 +17,7 @@ def pg_restore(c):
                 --no-owner \
                 --clean \
                 --if-exists \
-                {code_path / local_dump} \
+                {code_path / config.database_local_dump} \
         "',
         pty=True,
     )

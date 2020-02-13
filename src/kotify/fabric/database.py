@@ -1,16 +1,15 @@
 import os
-import pathlib
 
 import invoke.exceptions
 
 from . import aws, docker
+from ._config import Config
 from ._core import Collection, local, task
 
 
 @task(name="restore")
 def pg_restore(c):
-    code_path = pathlib.Path(c.get("docker", {}).get("workdir", "/code"))
-    local_dump = c.get("database", {}).get("local_dump", "dump.db")
+    config = Config(c)
     database_url = os.environ.get("DATABASE_URL")
     if not database_url:
         raise invoke.exceptions.Exit("DATABASE_URL environment variable is not set.")
@@ -22,7 +21,7 @@ def pg_restore(c):
             --no-owner \
             --clean \
             --if-exists \
-            {code_path} / {local_dump}"
+            {config.database_local_dump}"
     )
     post_restore_script = c.get("database", {}).get("post_restore_script")
     if post_restore_script:
