@@ -10,6 +10,7 @@ server:
   virtualenv_dir: /srv/fabric/env
   django_dir: /srv/fabric/fabric/backend
   django_settings_module: fabric.settings.prod
+  host_key: 'ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBFziaskdfjasldfjDbGZglGfDWj3Xti5BhowqJcLhDhMcAymw+h6GLYo34KwFku0oJqzxXOBS9A6PNE='
 aws:
   instance_id: "i-0aaaaaaaaa"
   region: "us-east-1"

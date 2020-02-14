@@ -31,6 +31,6 @@ d.add_task(backend)
 
 ns = Collection()
 ns.add_collection(d)
-ns.add_collection(kotify.fabric.database.get_namespace(use_aws=True, use_docker=True))
+ns.add_collection(kotify.fabric.database.get_namespace(use_aws=True))
 ns.add_collection(kotify.fabric.aws.ns)
 ns.add_collection(kotify.fabric.docker.ns)

@@ -2,12 +2,13 @@ import os
 
 import invoke.exceptions
 
-from . import aws, docker
+from . import aws
+from . import docker as _docker
 from ._config import Config
 from ._core import Collection, local, task
 
 
-@task(name="restore")
+@task(name="pg_restore")
 def pg_restore(c):
     config = Config(c)
     database_url = os.environ.get("DATABASE_URL")
@@ -28,18 +29,26 @@ def pg_restore(c):
         local(f"psql --dbname={database_url} -f {post_restore_script}")
 
 
+@task(name="restore")
+def restore(c, host=True, docker=True):
+    if host:
+        try:
+            pg_restore(c)
+        except invoke.exceptions.Failure:
+            pass
+    if docker:
+        _docker.pg_restore(c)
+
+
 @task
 def reset(c):
     local("django-admin reset_db --noinput -c")
 
 
-def get_namespace(use_aws=False, use_docker=False):
+def get_namespace(use_aws=False):
     ns = Collection("db")
     ns.add_task(reset)
     if use_aws:
         ns.add_task(aws.database_dump)
-    if use_docker:
-        ns.add_task(docker.pg_restore)
-    else:
-        ns.add_task(pg_restore)
+    ns.add_task(restore)
     return ns

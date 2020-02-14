@@ -43,6 +43,6 @@ def database_dump(c):
     local(f"ln -f -s {ts_path.name} {local_dump}")
 
 
-ns = Collection("ssh")
+ns = Collection("aws")
 ns.add_task(mssh)
 ns.add_task(addkey)
