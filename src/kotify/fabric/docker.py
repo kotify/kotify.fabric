@@ -27,9 +27,10 @@ def pg_restore(c):
         local(
             f'docker-compose exec -u postgres db bash -c "\
                 psql \
-                    --dbname=\\$$DATABASE_URL \
+                    --dbname=\\$DATABASE_URL \
                     -f {code_path / post_restore_script} \
-            "'
+            "',
+            pty=True,
         )
 
 
