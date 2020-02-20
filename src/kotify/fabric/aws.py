@@ -14,7 +14,7 @@ def get_secret(region_name, secret_id, plain=False):
     import boto3
 
     client = boto3.client(service_name="secretsmanager", region_name=region_name)
-    secret = client.get_secret_value(secret_id)["SecretString"]
+    secret = client.get_secret_value(SecretId=secret_id)["SecretString"]
     return secret if plain else json.loads(secret)
 
 
