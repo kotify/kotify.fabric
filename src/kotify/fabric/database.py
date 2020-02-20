@@ -10,6 +10,7 @@ from ._core import Collection, local, task
 
 @task(name="pg_restore")
 def pg_restore(c):
+    """Restore database from dump"""
     config = Config(c)
     database_url = os.environ.get("DATABASE_URL")
     if not database_url:
@@ -31,6 +32,7 @@ def pg_restore(c):
 
 @task(name="restore")
 def restore(c, host=True, docker=True):
+    """Restore database from dump (tries local restore then in docker)"""
     if host:
         try:
             pg_restore(c)
@@ -42,6 +44,7 @@ def restore(c, host=True, docker=True):
 
 @task
 def reset(c):
+    """Reset database using django-extensions `reset_db`"""
     local("django-admin reset_db --noinput -c")
 
 

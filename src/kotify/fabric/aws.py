@@ -18,13 +18,29 @@ def get_secret(region_name, secret_id, plain=False):
     return secret if plain else json.loads(secret)
 
 
+def populate_env_from_secret(region_name, secret_id):
+    """
+    Add environment variables from AWS secret
+
+    It doesn't overwrite existing variables.
+    """
+    for name, value in get_secret(region_name, secret_id).items():
+        os.environ.setdefault(name, value)
+
+
 @task(default=True)
 def mssh(c):
+    """
+    SSH into production server (using AWS access key)
+
+    Requires AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY variables in environment.
+    """
     local(f"mssh {mssh_args(c)}", pty=True)
 
 
 @task
 def addkey(c):
+    """Add your id_rsa.pub to the production server for 60 seconds"""
     local(
         f"aws ec2-instance-connect send-ssh-public-key \
             --region {c.aws.region} \
@@ -38,6 +54,11 @@ def addkey(c):
 
 @task(name="dump")
 def database_dump(c):
+    """
+    Create database dump (using AWS access key)
+
+    Requires AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY variables in environment.
+    """
     local_dump = pathlib.Path(
         c.get("database", {}).get("local_dump", "dump/dump.db")
     ).absolute()
