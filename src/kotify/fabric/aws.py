@@ -1,4 +1,5 @@
 import datetime
+import json
 import os.path
 import pathlib
 
@@ -7,6 +8,14 @@ from ._core import Collection, local, task
 
 def mssh_args(c):
     return f"-r {c.aws.region} -o IdentitiesOnly=yes {c.user}@{c.aws.instance_id}"
+
+
+def get_secret(region_name, secret_id, plain=False):
+    import boto3
+
+    client = boto3.client(service_name="secretsmanager", region_name=region_name)
+    secret = client.get_secret_value(secret_id)["SecretString"]
+    return secret if plain else json.loads(secret)
 
 
 @task(default=True)

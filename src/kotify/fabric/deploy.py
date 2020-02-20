@@ -33,13 +33,28 @@ class PipPipfilePythonController(BaseController):
 
 
 class DjangoController(BaseController):
-    def collectstatic(self):
+    @staticmethod
+    def _get_args(settings=None):
+        args = ["--noinput"]
+        if settings:
+            args.append(f"--settings {settings}")
+        return args
+
+    @staticmethod
+    def _get_cmd(django_cmd, **kwargs):
+        args = DjangoController._get_args(**kwargs)
+        return " ".join(("django-admin", django_cmd, *args))
+
+    def collectstatic(self, settings=None):
         self.deploy.run(
-            "django-admin collectstatic --noinput", msg="django-admin collectstatic"
+            self._get_cmd("collectstatic", settings=settings),
+            msg="django collectstatic",
         )
 
-    def migrate(self):
-        self.deploy.run("django-admin migrate --noinput", msg="migrate db")
+    def migrate(self, settings=None):
+        self.deploy.run(
+            self._get_cmd("migrate", settings=settings), msg="django migrate"
+        )
 
 
 class SupervisorController(BaseController):
@@ -48,26 +63,29 @@ class SupervisorController(BaseController):
         self.services = services
         self.pre_stop_services = pre_stop_services
 
-    def stop_app(self):
-        self._pre_stop()
-        if self.services:
-            services = " ".join(self.services)
+    @staticmethod
+    def _get_services(services, group):
+        group = group and group.rstrip(":")
+        return " ".join(":".join((group, s)) if group else s for s in services)
+
+    def stop_app(self, group=None):
+        self._pre_stop(group=group)
+        services = self._get_services(self.services, group)
         self.deploy.sudo(f"supervisorctl stop {services}", msg=f"stop {services}")
 
-    def _pre_stop(self):
+    def _pre_stop(self, group=None):
         if self.pre_stop_services:
-            services = " ".join(self.pre_stop_services)
+            services = self._get_services(self.pre_stop_services, group)
             self.deploy.sudo(f"supervisorctl stop {services}", msg=f"stop {services}")
 
-    def start_app(self):
-        if self.services:
-            services = " ".join(self.services)
+    def start_app(self, group=None):
+        services = self._get_services(self.services, group)
         self.deploy.sudo(f"supervisorctl start {services}", msg=f"start {services}")
-        self._post_start()
+        self._post_start(group=group)
 
-    def _post_start(self):
+    def _post_start(self, group=None):
         if self.pre_stop_services:
-            services = " ".join(self.pre_stop_services)
+            services = self._get_services(self.pre_stop_services, group)
             self.deploy.sudo(f"supervisorctl start {services}", msg=f"start {services}")
 
 

@@ -33,6 +33,8 @@ jobs:
           python-version: ${{ matrix.python }}
       - name: Install package
         run: pip install -e .
+      - name: Run tests
+        run: py.test
       - name: Run fabric
         run: fab -r example --list
 
