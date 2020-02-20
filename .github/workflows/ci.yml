@@ -7,24 +7,35 @@ on:
   pull_request:
 
 jobs:
+
   lint:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python
-      uses: actions/setup-python@v1
-      with:
-        python-version: '3.x'
-    - name: Run pre-commit
-      run: |
-        pip install pre-commit
-        pre-commit run --all
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: '3.x'
+      - name: Create py.version file
+        run: |
+          python --version > py.version
+      - uses: actions/cache@v1
+        id: pre-commit-cache
+        with:
+          path: ~/.cache/pre-commit
+          key: cache-${{ hashFiles(format('{0}{1}', github.workspace, '/py.version')) }}-${{ hashFiles(format('{0}{1}', github.workspace, '/.pre-commit-config.yaml')) }}
+          restore-keys: |
+            cache-${{ hashFiles(format('{0}{1}', github.workspace, '/py.version')) }}-
+      - name: Run pre-commit
+        run: |
+          pip install pre-commit
+          pre-commit run --all
+
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         python: [3.6, 3.7, 3.8]
-
     steps:
       - uses: actions/checkout@v2
       - name: Setup Python
@@ -42,20 +53,20 @@ jobs:
     needs: [lint, build]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python
-      uses: actions/setup-python@v1
-      with:
-        python-version: '3.x'
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install setuptools wheel twine
-    - name: Build and publish
-      env:
-        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-      run: |
-        python setup.py sdist bdist_wheel
-        twine check dist/*
-        twine upload dist/*
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: '3.x'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install setuptools wheel twine
+      - name: Build and publish
+        env:
+          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        run: |
+          python setup.py sdist bdist_wheel
+          twine check dist/*
+          twine upload dist/*

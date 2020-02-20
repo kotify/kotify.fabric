@@ -147,20 +147,25 @@ class BaseDeploy:
             f"source {env_bin}/activate && cd {context.server.project_dir}"
         )
 
-    def sudo(self, cmd, msg=None, user="root"):
+    def sudo(self, cmd, msg=None, user="root", hide=True, warn=True, **kwargs):
         if msg:
             print("*" * 80)
             print(TermColors.OKGREEN + msg + TermColors.ENDC)
             print("\n")
-        result = self.context.sudo(f'bash -c "{cmd}"', user=user, hide=True, warn=True)
+        result = self.context.sudo(
+            f'bash -c "{cmd}"', user=user, hide=hide, warn=warn, **kwargs
+        )
         if result.exited:
             print(TermColors.FAIL + result.stderr + TermColors.ENDC)
             raise invoke.exceptions.Exit("Command returned non zero code.")
         return result
 
-    def run(self, cmd, msg=None):
+    def run(self, cmd, msg=None, **kwargs):
         return self.sudo(
-            f"{self._cmd_prefix} && {cmd}", msg=msg, user=self.context.server.user
+            f"{self._cmd_prefix} && {cmd}",
+            msg=msg,
+            user=self.context.server.user,
+            **kwargs,
         )
 
     def put(self, src, dst, msg=None):
