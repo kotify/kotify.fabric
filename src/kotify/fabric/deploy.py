@@ -96,29 +96,35 @@ class GitController(BaseController):
         self.release_branch = release_branch
         self.project_dir = pathlib.Path(project_dir)
 
+    @property
     def is_repo_exist(self):
-        if (self.project_dir / ".git").exists():
+        try:
+            self.deploy.run(f"[[ -d {self.project_dir}/.git ]]")
             return True
-        if self.project_dir.exists():
-            raise invoke.exceptions.Exit(
-                "Project directory exists but it's not a git repo."
-            )
-        return False
+        except invoke.exceptions.Exit:
+            pass
+        try:
+            self.deploy.run(f"[[ -d {self.project_dir} ]]")
+        except invoke.exceptions.Exit:
+            return False
+        raise invoke.exceptions.Exit(
+            "Project directory exists but it's not a git repo."
+        )
 
+    @property
     def is_url_match(self):
         result = self.deploy.run("git remote show origin -n")
         try:
             url = next(
-                s for s in result.stdout.split("\n") if s.startswith("Fetch URL: ")
-            )[11:]
+                s
+                for s in result.stdout.split("\n")
+                if s.strip().startswith("Fetch URL: ")
+            ).strip()[11:]
         except StopIteration:
             raise invoke.exceptions.Exit(
                 f"`git remote show origin -n` returns invalid response:\n{result.stdout}"
             )
-        if url != self.url:
-            self.deploy.run(
-                "git remote set-url origin {self.url}", msg="update git url"
-            )
+        return url == self.url
 
     def pull(self, version=None):
         if self.is_repo_exist:
@@ -129,11 +135,7 @@ class GitController(BaseController):
                 )
             self.deploy.run(f"git fetch origin {self.release_branch}", msg="git pull")
         else:
-            self.deploy.sudo(
-                f"git clone {self.url} {self.project_dir}",
-                user=self.user,
-                msg="git clone",
-            )
+            self.deploy.run(f"git clone {self.url} {self.project_dir}", msg="git clone")
         self.deploy.run(f"git checkout --force {version or self.release_branch}")
 
 
