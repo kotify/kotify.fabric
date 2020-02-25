@@ -1,4 +1,6 @@
+import datetime
 import os
+import pathlib
 
 import invoke.exceptions
 
@@ -46,6 +48,24 @@ def restore(c, host=True, docker=True):
 def reset(c):
     """Reset database using django-extensions `reset_db`"""
     local("django-admin reset_db --noinput -c")
+
+
+def create_dump(c):
+    try:
+        local_dump = pathlib.Path(c["database"]["local_dump"]).absolute()
+    except KeyError:
+        local_dump = pathlib.Path("dump/dump.db")
+    dump_dir = local_dump.parent
+    dump_name = local_dump.name
+    ts = datetime.datetime.now().strftime("%F-%H:%M:%S")
+    ts_path = dump_dir / ("_" + ts).join(os.path.splitext(dump_name))
+    if not dump_dir.exists():
+        dump_dir.mkdir(parents=True)
+    c.run(f"sudo -u {c.server.user} -i -- app-db-dump")
+    local(
+        f"rsync --archive --compress --progress {c.host}:{c.server.home_dir}/{dump_name} {ts_path}"
+    )
+    local(f"ln -f -s {ts_path.name} {local_dump}")
 
 
 def get_namespace(use_aws=False):
