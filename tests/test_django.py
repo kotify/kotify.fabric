@@ -13,13 +13,13 @@ def test_django(fake_deploy):
     dc = DjangoController(fake_deploy)
     dc.migrate()
     assert fake_deploy._runs == [
-        {"cmd": "django-admin migrate --noinput", "msg": "django migrate"}
+        {"cmd": "django-admin migrate --noinput", "msg": "django-admin migrate"}
     ]
     fake_deploy.reset_fake()
     dc.collectstatic(settings="path.to.settings")
     assert fake_deploy._runs == [
         {
             "cmd": "django-admin collectstatic --noinput --settings path.to.settings",
-            "msg": "django collectstatic",
+            "msg": "django-admin collectstatic",
         }
     ]

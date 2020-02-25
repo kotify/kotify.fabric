@@ -45,16 +45,16 @@ class DjangoController(BaseController):
         args = DjangoController._get_args(**kwargs)
         return " ".join(("django-admin", django_cmd, *args))
 
-    def collectstatic(self, settings=None):
+    def run(self, cmd, settings=None):
         self.deploy.run(
-            self._get_cmd("collectstatic", settings=settings),
-            msg="django collectstatic",
+            self._get_cmd(cmd, settings=settings), msg=f"django-admin {cmd}"
         )
 
+    def collectstatic(self, settings=None):
+        self.run("collectstatic", settings=settings)
+
     def migrate(self, settings=None):
-        self.deploy.run(
-            self._get_cmd("migrate", settings=settings), msg="django migrate"
-        )
+        self.run("migrate", settings=settings)
 
 
 class SupervisorController(BaseController):
