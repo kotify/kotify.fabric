@@ -34,8 +34,8 @@ class PipPipfilePythonController(BaseController):
 
 class DjangoController(BaseController):
     @staticmethod
-    def _get_args(settings=None):
-        args = ["--noinput"]
+    def _get_args(options=None, settings=None):
+        args = options or []
         if settings:
             args.append(f"--settings {settings}")
         return args
@@ -45,16 +45,19 @@ class DjangoController(BaseController):
         args = DjangoController._get_args(**kwargs)
         return " ".join(("django-admin", django_cmd, *args))
 
-    def run(self, cmd, settings=None):
+    def run(self, cmd, options=None, settings=None):
         self.deploy.run(
-            self._get_cmd(cmd, settings=settings), msg=f"django-admin {cmd}"
+            self._get_cmd(cmd, options=options, settings=settings),
+            msg=f"django-admin {cmd}",
         )
 
-    def collectstatic(self, settings=None):
-        self.run("collectstatic", settings=settings)
+    def collectstatic(self, options=None, settings=None):
+        options = ["--noinput"] if options is None else options
+        self.run("collectstatic", options=options, settings=settings)
 
-    def migrate(self, settings=None):
-        self.run("migrate", settings=settings)
+    def migrate(self, options=None, settings=None):
+        options = ["--noinput"] if options is None else options
+        self.run("migrate", options=options, settings=settings)
 
 
 class SupervisorController(BaseController):
