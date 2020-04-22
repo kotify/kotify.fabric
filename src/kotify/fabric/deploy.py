@@ -139,7 +139,27 @@ class GitController(BaseController):
             self.deploy.run(f"git fetch origin {self.release_branch}", msg="git pull")
         else:
             self.deploy.run(f"git clone {self.url} {self.project_dir}", msg="git clone")
-        self.deploy.run(f"git checkout --force {version or self.release_branch}")
+        if version:
+            self.deploy.run(f"git checkout --force {version}")
+        else:
+            if self.release_branch in self._list_branches():
+                self.deploy.run(f"git checkout --force {self.release_branch}")
+                self.deploy.run(f"git reset --hard origin/{self.release_branch}")
+            else:
+                self.deploy.run(
+                    f"git checkout --track -b {self.release_branch} origin/{self.release_branch}"
+                )
+
+    def _list_branches(self):
+        result = self.deploy.run("git branch --no-color -a")
+        branches = []
+        for branch in result.stdout.split("\n"):
+            branch = branch.strip()
+            if branch.startswith("*"):
+                branch = branch[2:]
+            if branch:
+                branches.append(branch)
+        return branches
 
 
 class BaseDeploy:
