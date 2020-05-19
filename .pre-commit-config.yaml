@@ -1,6 +1,6 @@
 repos:
   -   repo: https://github.com/asottile/seed-isort-config
-      rev: v1.9.3
+      rev: v2.1.1
       hooks:
       -   id: seed-isort-config
 
@@ -16,13 +16,13 @@ repos:
           types: [python]
 
   -   repo: https://gitlab.com/pycqa/flake8
-      rev: 3.7.9
+      rev: 3.8.1
       hooks:
       -   id: flake8
           additional_dependencies: ['flake8-bugbear>=19.8.0', 'flake8-comprehensions>=3.1.4', 'pep8-naming>=0.9.1']
 
   -   repo: https://github.com/pre-commit/pre-commit-hooks
-      rev: v2.4.0
+      rev: v3.0.1
       hooks:
       -   id: trailing-whitespace
       -   id: end-of-file-fixer
@@ -33,6 +33,7 @@ repos:
           args: ['--fix=lf']
 
   -   repo: https://github.com/mgedmin/check-manifest
-      rev: "0.40"
+      rev: '0.42'
       hooks:
       -   id: check-manifest
+          language: python_venv

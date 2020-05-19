@@ -1,4 +1,4 @@
-/.envrc
+/.env*
 /.direnv
 *.egg-info
 __pycache__

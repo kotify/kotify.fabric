@@ -52,6 +52,16 @@ def addkey(c):
     )
 
 
+@task(addkey)
+def host(c):
+    import boto3
+
+    ec2 = boto3.client("ec2", region_name=c["aws"]["region"])
+    instances = ec2.describe_instances(InstanceIds=[c["aws"]["instance_id"]])
+    host = instances["Reservations"][0]["Instances"][0]["PublicDnsName"]
+    print(f"{c['user']}@{host}")
+
+
 @task(name="dump")
 def database_dump(c):
     """
@@ -76,3 +86,4 @@ def database_dump(c):
 ns = Collection("aws")
 ns.add_task(mssh)
 ns.add_task(addkey)
+ns.add_task(host)
