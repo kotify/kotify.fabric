@@ -43,19 +43,19 @@ def docker_minimal(c):
 @task(name="up")
 def docker_up(c):
     """Up docker services"""
-    local(f"docker-compose up")
+    local("docker-compose up")
 
 
 @task(name="down")
 def docker_down(c):
     """Down docker services"""
-    local(f"docker-compose down")
+    local("docker-compose down")
 
 
 @task(name="build")
 def docker_build(c):
     """Build docker"""
-    local(f"docker-compose build")
+    local("docker-compose build")
 
 
 ns = Collection("docker")
