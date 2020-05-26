@@ -30,6 +30,7 @@ def _create_keys_known_hosts(context, gen_key):
 
 @task
 def prepare(context, gen_key=True):
+    """Prepare ssh keys to connect to remote host."""
     _create_keys_known_hosts(context, gen_key=gen_key)
     if FABRIC_USE_AWS:
         aws.addkey(context)

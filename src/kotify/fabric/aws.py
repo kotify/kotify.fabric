@@ -54,6 +54,7 @@ def addkey(c):
 
 @task(addkey)
 def host(c):
+    """Return `username@hostname` that can be used in ssh."""
     import boto3
 
     ec2 = boto3.client("ec2", region_name=c["aws"]["region"])

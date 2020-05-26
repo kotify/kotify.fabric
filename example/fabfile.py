@@ -1,7 +1,4 @@
-import kotify.fabric.aws
-import kotify.fabric.database
-import kotify.fabric.docker
-from kotify.fabric import Collection, task
+from kotify.fabric import Collection, aws, database, docker, task
 from kotify.fabric.deploy import BackendDeploy, FrontendDeploy
 
 
@@ -12,7 +9,7 @@ def frontend(c, release=True, install=True):
         deploy.node.install()
 
 
-@task(kotify.fabric.aws.addkey, hosts=["kotify.invalid"], name="backend")
+@task(aws.addkey, hosts=["kotify.invalid"], name="backend")
 def backend(c):
     deploy = BackendDeploy(c)
     deploy.python.install()
@@ -31,6 +28,6 @@ d.add_task(backend)
 
 ns = Collection()
 ns.add_collection(d)
-ns.add_collection(kotify.fabric.database.get_namespace(use_aws=True))
-ns.add_collection(kotify.fabric.aws.ns)
-ns.add_collection(kotify.fabric.docker.ns)
+ns.add_collection(database.ns)
+ns.add_collection(aws.ns)
+ns.add_collection(docker.ns)
