@@ -6,7 +6,7 @@ from ._core import Collection, local, task
 
 @task(name="restore")
 def pg_restore(c):
-    """Restore postgresql database from dump"""
+    """Restore postgresql database from dump."""
     code_path = pathlib.Path(c.get("docker", {}).get("workdir", "/code"))
     config = Config(c)
     local(
@@ -36,25 +36,25 @@ def pg_restore(c):
 
 @task(name="minimal")
 def docker_minimal(c):
-    """Up docker services from fabric.yml:docker.minimal"""
+    """Up docker services from fabric.yml:docker.minimal."""
     local(f"docker-compose up --no-deps {' '.join(c.docker.minimal)}")
 
 
 @task(name="up")
 def docker_up(c):
-    """Up docker services"""
+    """Up docker services."""
     local("docker-compose up")
 
 
 @task(name="down")
 def docker_down(c):
-    """Down docker services"""
+    """Down docker services."""
     local("docker-compose down")
 
 
 @task(name="build")
 def docker_build(c):
-    """Build docker"""
+    """Build docker."""
     local("docker-compose build")
 
 
