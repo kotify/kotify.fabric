@@ -4,17 +4,19 @@ import pathlib
 
 import invoke.exceptions
 
-from . import aws
-from . import docker as _docker
+from . import aws, docker
 from ._config import Config
 from ._core import Collection, local, task
 
+FABRIC_USE_AWS = os.environ.get("FABRIC_USE_AWS", False)
+FABRIC_USE_DOCKER = os.environ.get("FABRIC_USE_DOCKER", False)
 
-@task(name="pg_restore")
-def pg_restore(c):
+
+@task(name="restore")
+def pg_restore(c, database_url=None):
     """Restore database from dump."""
     config = Config(c)
-    database_url = os.environ.get("DATABASE_URL")
+    database_url = database_url or os.environ.get("DATABASE_URL")
     if not database_url:
         raise invoke.exceptions.Exit("DATABASE_URL environment variable is not set.")
     local(
@@ -27,21 +29,8 @@ def pg_restore(c):
             --if-exists \
             {config.database_local_dump}"
     )
-    post_restore_script = c.get("database", {}).get("post_restore_script")
-    if post_restore_script:
-        local(f"psql --dbname={database_url} -f {post_restore_script}")
-
-
-@task(name="restore")
-def restore(c, host=True, docker=True):
-    """Restore database from dump (tries local restore then in docker)."""
-    if host:
-        try:
-            pg_restore(c)
-        except invoke.exceptions.Failure:
-            pass
-    if docker:
-        _docker.pg_restore(c)
+    if config.post_restore_script:
+        local(f"psql --dbname={database_url} -f {config.post_restore_script}")
 
 
 @task
@@ -68,10 +57,11 @@ def create_dump(c):
     local(f"ln -f -s {ts_path.name} {local_dump}")
 
 
-def get_namespace(use_aws=False):
-    ns = Collection("db")
-    ns.add_task(reset)
-    if use_aws:
-        ns.add_task(aws.database_dump)
-    ns.add_task(restore)
-    return ns
+ns = Collection("db")
+ns.add_task(reset)
+if FABRIC_USE_AWS:
+    ns.add_task(aws.database_dump)
+if FABRIC_USE_DOCKER:
+    ns.add_task(docker.pg_restore)
+else:
+    ns.add_task(pg_restore)

@@ -22,13 +22,12 @@ def pg_restore(c):
         "',
         pty=True,
     )
-    post_restore_script = c.get("database", {}).get("post_restore_script")
-    if post_restore_script:
+    if config.post_restore_script:
         local(
             f'docker-compose exec -u postgres db bash -c "\
                 psql \
                     --dbname=\\$DATABASE_URL \
-                    -f {code_path / post_restore_script} \
+                    -f {code_path / config.post_restore_script} \
             "',
             pty=True,
         )
@@ -40,26 +39,19 @@ def docker_minimal(c):
     local(f"docker-compose up --no-deps {' '.join(c.docker.minimal)}")
 
 
-@task(name="up")
-def docker_up(c):
+@task(name="main", default=True)
+def docker_main(c):
+    """Up docker services from fabric.yml:docker.main."""
+    local(f"docker-compose up --no-deps {' '.join(c.docker.main + c.docker.minimal)}")
+
+
+@task(name="all")
+def docker_all(c):
     """Up docker services."""
     local("docker-compose up")
 
 
-@task(name="down")
-def docker_down(c):
-    """Down docker services."""
-    local("docker-compose down")
-
-
-@task(name="build")
-def docker_build(c):
-    """Build docker."""
-    local("docker-compose build")
-
-
 ns = Collection("docker")
 ns.add_task(docker_minimal)
-ns.add_task(docker_up)
-ns.add_task(docker_down)
-ns.add_task(docker_build)
+ns.add_task(docker_main)
+ns.add_task(docker_all)

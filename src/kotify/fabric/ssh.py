@@ -1,11 +1,15 @@
+import os
 import pathlib
 
 from paramiko.hostkeys import HostKeyEntry, HostKeys
 
-from ._core import local
+from . import aws
+from ._core import Collection, local, task
+
+FABRIC_USE_AWS = os.environ.get("FABRIC_USE_AWS", False)
 
 
-def prepare_ssh(c, gen_key=True):
+def _create_keys_known_hosts(context, gen_key):
     ssh = pathlib.Path("~/.ssh").expanduser()
     if not ssh:
         local("mkdir ~/.ssh")
@@ -14,10 +18,26 @@ def prepare_ssh(c, gen_key=True):
         id_rsa = ssh / "id_rsa"
         if not id_rsa.exists():
             local(f'ssh-keygen -b 2048 -t rsa -f {id_rsa} -q -N ""')
-    if c.server.get("host_key"):
+    if context.server.get("host_key"):
         hk = HostKeys(ssh / "known_hosts" if (ssh / "known_hosts").exists() else None)
-        if not hk.lookup(c.host):
-            host_key = HostKeyEntry.from_line(f"{c.host} {c.server.host_key}")
+        host = getattr(context, "host", None)
+        if host and not hk.lookup(host):
+            host_key = HostKeyEntry.from_line(f"{host} {context.server.host_key}")
             assert host_key, "Invalid value in fabric.yml server.host_key"
             hk.add(",".join(host_key.hostnames), host_key.key.get_name(), host_key.key)
             hk.save(ssh / "known_hosts")
+
+
+@task
+def prepare(context, gen_key=True):
+    _create_keys_known_hosts(context, gen_key=gen_key)
+    if FABRIC_USE_AWS:
+        aws.addkey(context)
+
+
+ns = Collection("ssh")
+ns.add_task(prepare)
+if FABRIC_USE_AWS:
+    ns.add_task(aws.mssh)
+    ns.add_task(aws.addkey)
+    ns.add_task(aws.host)
